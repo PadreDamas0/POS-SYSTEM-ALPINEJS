@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dambalasek POS System - Alpine.js</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+</head>
+<body>
+    <div id="app" x-data="POSApp()" x-init="init()">
+        <!-- Login Page -->
+        <div x-show="currentPage === 'login'" class="login-container">
+            <div class="login-box">
+                <h1>DAMBALASEK™ POS</h1>
+                <form @submit.prevent="handleLogin">
+                    <div class="form-group">
+                        <label>Username</label>
+                        <input type="text" x-model="loginForm.username" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Password</label>
+                        <input type="password" x-model="loginForm.password" required>
+                    </div>
+                    <button type="submit" class="login-btn">Login</button>
+                    <p class="demo-info">Demo: superadmin / superadmin123 or cashier1 / cashier123</p>
+                </form>
+            </div>
+        </div>
+
+        <!-- Admin Dashboard -->
+        <div x-show="currentPage === 'admin'" class="admin-container">
+            <div class="header">
+                <h1>Superadmin Dashboard</h1>
+                <div class="nav-buttons">
+                    <button @click="currentPage = 'manage-users'" class="nav-btn">Manage Users</button>
+                    <button @click="currentPage = 'manage-products'" class="nav-btn">Manage Products</button>
+                    <button @click="currentPage = 'reports'" class="nav-btn">Reports</button>
+                    <button @click="handleLogout()" class="nav-btn logout-btn">Logout</button>
+                </div>
+            </div>
+
+            <div class="dashboard-grid">
+                <div class="card">
+                    <h3>Total Admins</h3>
+                    <div class="card-value" x-text="users.length"></div>
+                </div>
+                <div class="card">
+                    <h3>Total Orders</h3>
+                    <div class="card-value" x-text="orders.length"></div>
+                </div>
+                <div class="card">
+                    <h3>Total Revenue</h3>
+                    <div class="card-value" x-text="'₱' + totalRevenue.toFixed(2)"></div>
+                </div>
+            </div>
+
+            <div class="users-section">
+                <h2>Registered Admins</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Username</th>
+                            <th>Email</th>
+                            <th>Status</th>
+                            <th>Registered</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <template x-for="user in users" :key="user.id">
+                            <tr>
+                                <td x-text="user.id"></td>
+                                <td x-text="user.username"></td>
+                                <td x-text="user.email"></td>
+                                <td :class="'status-' + user.status" x-text="user.status.toUpperCase()"></td>
+                                <td x-text="new Date(user.date_added).toLocaleDateString()"></td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button x-show="user.status === 'active'" @click="suspendUser(user.id)" class="btn-small btn-suspend">Suspend</button>
+                                        <button x-show="user.status === 'suspended'" @click="activateUser(user.id)" class="btn-small btn-activate">Activate</button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Reports Page -->
+        <div x-show="currentPage === 'reports'" class="admin-container">
+            <div class="header">
+                <h1>Reports</h1>
+                <button @click="currentPage = 'admin'" class="nav-btn">Back to Dashboard</button>
+            </div>
+
+            <div class="dashboard-grid">
+                <div class="card">
+                    <h3>Total Orders</h3>
+                    <div class="card-value" x-text="orders.length"></div>
+                </div>
+                <div class="card">
+                    <h3>Total Revenue</h3>
+                    <div class="card-value" x-text="'₱' + totalRevenue.toFixed(2)"></div>
+                </div>
+            </div>
+
+            <div class="users-section">
+                <h2>Order History</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Order #</th>
+                            <th>Total Amount</th>
+                            <th>Payment</th>
+                            <th>Change</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <template x-for="order in orders" :key="order.order_number">
+                            <tr>
+                                <td x-text="order.order_number"></td>
+                                <td x-text="'₱' + order.total_amount.toFixed(2)"></td>
+                                <td x-text="'₱' + order.payment_amount.toFixed(2)"></td>
+                                <td x-text="'₱' + order.change_amount.toFixed(2)"></td>
+                                <td x-text="new Date(order.date_added).toLocaleDateString()"></td>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- POS Interface -->
+        <div x-show="currentPage === 'pos'" class="pos-container">
+            <div class="header">
+                <h1>DAMBALASEK™ POS</h1>
+                <div class="user-info">
+                    <span x-text="'Welcome, ' + (currentUser?.username || '')"></span>
+                    <button @click="handleLogout()" class="logout-btn">Logout</button>
+                </div>
+            </div>
+
+            <div class="menu-section">
+                <div class="menu-header">
+                    <h2>Menu Items</h2>
+                </div>
+                <div class="menu-container">
+                    <template x-for="product in products" :key="product.id">
+                        <div class="item-card">
+                            <img :src="product.image_path" :alt="product.name" @error="$el.style.display='none'">
+                            <h4 x-text="product.name"></h4>
+                            <p x-text="'₱' + product.price.toFixed(2)"></p>
+                            <button type="button" class="addBtn" @click="addToCart(product.id, product.name, product.price)">Add to Cart</button>
+                        </div>
+                    </template>
+                </div>
+            </div>
+
+            <div class="cart-section">
+                <div class="cart-box">
+                    <h3>Your Cart</h3>
+                    <ul id="cartItems">
+                        <template x-for="(item, index) in cart" :key="index">
+                            <li>
+                                <div>
+                                    <strong x-text="item.name"></strong><br>
+                                    <span x-text="'x' + item.qty + ' @ ₱' + item.price.toFixed(2) + ' = ₱' + (item.qty * item.price).toFixed(2)"></span>
+                                </div>
+                                <button class="cart-item-remove" @click="removeFromCart(index)">Remove</button>
+                            </li>
+                        </template>
+                    </ul>
+                    <div class="cart-total" x-text="'₱' + cartTotal.toFixed(2)"></div>
+                    <button class="clear-cart-btn" @click="clearCart()">Clear Cart</button>
+                </div>
+
+                <div class="cart-box payment-section">
+                    <h3 style="margin: 0 0 10px 0; color: #b30000;">Payment</h3>
+                    <input type="number" x-model.number="paymentAmount" placeholder="Enter amount" step="0.01" min="0">
+                    <button @click="processOrder()">Complete Order & Pay</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Receipt Modal -->
+        <div x-show="showReceipt" class="receipt-modal">
+            <div class="receipt-content">
+                <h2>Order Receipt</h2>
+                <div x-html="receiptHTML"></div>
+                <button class="close-receipt" @click="showReceipt = false; window.print()">Print & Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/alpine-database.js"></script>
+    <script src="js/alpine-app.js"></script>
+</body>
+</html>
