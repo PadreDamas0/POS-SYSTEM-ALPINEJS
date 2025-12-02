@@ -1,4 +1,4 @@
-// Alpine.js Application
+
 const AlpineDatabase = {
   getAllUsers: () => [],
   getAllProducts: () => [],
