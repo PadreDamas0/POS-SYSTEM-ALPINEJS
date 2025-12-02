@@ -10,7 +10,7 @@
 </head>
 <body>
     <div id="app" x-data="POSApp()" x-init="init()">
-        <!-- Login Page -->
+
         <div x-show="currentPage === 'login'" class="login-container">
             <div class="login-box">
                 <h1>DAMBALASEK™ POS</h1>
@@ -29,7 +29,7 @@
             </div>
         </div>
 
-        <!-- Admin Dashboard -->
+
         <div x-show="currentPage === 'admin'" class="admin-container">
             <div class="header">
                 <h1>Superadmin Dashboard</h1>
@@ -135,7 +135,7 @@
             </div>
         </div>
 
-        <!-- POS Interface -->
+
         <div x-show="currentPage === 'pos'" class="pos-container">
             <div class="header">
                 <h1>DAMBALASEK™ POS</h1>
@@ -187,7 +187,7 @@
             </div>
         </div>
 
-        <!-- Receipt Modal -->
+
         <div x-show="showReceipt" class="receipt-modal">
             <div class="receipt-content">
                 <h2>Order Receipt</h2>
