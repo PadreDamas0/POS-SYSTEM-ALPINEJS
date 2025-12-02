@@ -1,4 +1,4 @@
-// Alpine.js Database Management
+// db management
 const AlpineDatabase = {
   users: [
     {
